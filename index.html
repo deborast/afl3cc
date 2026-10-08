@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AFL3CC - Smart Cashflow & Analytics</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="main-wrapper">
+        <header class="top-brand">
+            <div class="logo-circle">💸</div>
+            <h1>OUR<span>wallet</span></h1>
+            <p>Manajemen Arus Kas Harian & Analitik Pengeluaran Bulanan</p>
+        </header>
+
+        <section id="auth-section" class="glass-card auth-box">
+            <div class="tab-Headers">
+                <button id="tab-login" class="active" onclick="switchTab('login')">Masuk</button>
+                <button id="tab-register" onclick="switchTab('register')">Daftar Akun</button>
+            </div>
+
+            <div id="auth-alert" class="alert-banner hidden"></div>
+
+            <form id="login-form">
+                <div class="input-group">
+                    <label>Alamat Email</label>
+                    <input type="email" id="login-email" placeholder="contoh@email.com" required>
+                </div>
+                <div class="input-group">
+                    <label>Kata Sandi</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn-emerald">Masuk ke Dompet</button>
+            </form>
+
+            <form id="register-form" class="hidden">
+                <div class="input-group">
+                    <label>Alamat Email</label>
+                    <input type="email" id="reg-email" placeholder="Masukkan email..." required>
+                </div>
+                <div class="input-group">
+                    <label>Buat Kata Sandi</label>
+                    <input type="password" id="reg-password" placeholder="Minimal 6 karakter" required>
+                </div>
+                <button type="submit" class="btn-emerald">Daftar Akun Baru</button>
+            </form>
+        </section>
+
+        <section id="app-section" class="dashboard-wrapper hidden">
+            <div class="user-bar glass-card">
+                <div>
+                    <span class="badge-verified">● Akun Aktif</span>
+                    <p id="active-user-email" class="user-email"></p>
+                </div>
+                <div class="bar-right">
+                    <div class="month-picker">
+                        <label>📅 Periode:</label>
+                        <input type="month" id="filter-month">
+                    </div>
+                    <button id="btn-logout" class="btn-outline-danger">Keluar</button>
+                </div>
+            </div>
+
+            <div class="summary-grid">
+                <div class="summary-card income-card">
+                    <span>Total Pemasukan</span>
+                    <h2 id="display-income">Rp 0</h2>
+                </div>
+                <div class="summary-card expense-card">
+                    <span>Total Pengeluaran</span>
+                    <h2 id="total-amount">Rp 0</h2>
+                </div>
+                <div class="summary-card balance-card" id="balance-card-box">
+                    <span>Sisa Saldo Bulan Ini</span>
+                    <h2 id="remaining-balance">Rp 0</h2>
+                </div>
+            </div>
+
+            <div class="glass-card form-card">
+                <h3>+ Catat Transaksi Harian</h3>
+                <form id="transaction-form" class="transaction-grid-form">
+                    <select id="trx-type" onchange="updateCategoryOptions()">
+                        <option value="expense">🔻 Pengeluaran</option>
+                        <option value="income">🔺 Pemasukan / Saldo</option>
+                    </select>
+                    <input type="text" id="trx-title" placeholder="Keterangan (misal: Uang Saku, Makan Siang)" required>
+                    <input type="number" id="trx-amount" placeholder="Nominal (Rp)" min="1" required>
+                    <input type="date" id="trx-date" required>
+                    <select id="trx-category" class="full-span">
+                    </select>
+                    <button type="submit" class="btn-emerald full-span">Simpan Transaksi</button>
+                </form>
+            </div>
+
+            <div class="glass-card chart-card">
+                <h3>📊 Analitik Pengeluaran per Kategori</h3>
+                <div class="chart-wrapper">
+                    <div class="canvas-holder">
+                        <canvas id="expenseChart"></canvas>
+                        <p id="empty-chart-msg" class="empty-msg hidden">Belum ada data pengeluaran bulan ini.</p>
+                    </div>
+                    <div id="category-breakdown" class="category-breakdown">
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card list-card">
+                <div class="list-header">
+                    <h3>Riwayat Transaksi Bulan Ini</h3>
+                    <span id="total-items" class="badge-count">0 Catatan</span>
+                </div>
+                <div id="transaction-list" class="expense-items-container">
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
