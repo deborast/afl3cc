@@ -18,7 +18,6 @@ let currentUid = null;
 let allTransactions = {};
 let expenseChartInstance = null;
 
-// Kategori berdasarkan jenis transaksi
 const CATEGORIES = {
     expense: [
         { value: 'Konsumsi', label: '🍔 Konsumsi & Makan' },
@@ -46,13 +45,38 @@ const CATEGORY_COLORS = {
     'Lainnya': '#64748b'
 };
 
-// Set default bulan & tanggal hari ini
 const today = new Date();
+const defaultYear = today.getFullYear().toString();
 const defaultMonth = today.toISOString().slice(0, 7);
 const defaultDate = today.toISOString().slice(0, 10);
+const firstDayOfMonth = `${defaultMonth}-01`;
 
 document.getElementById('filter-month').value = defaultMonth;
+document.getElementById('filter-year').value = defaultYear;
+document.getElementById('filter-start').value = firstDayOfMonth;
+document.getElementById('filter-end').value = defaultDate;
 document.getElementById('trx-date').value = defaultDate;
+
+window.handleFilterModeChange = () => {
+    const mode = document.getElementById('filter-mode').value;
+    const monthlyBox = document.getElementById('filter-monthly-box');
+    const yearlyBox = document.getElementById('filter-yearly-box');
+    const customBox = document.getElementById('filter-custom-box');
+
+    monthlyBox.classList.add('hidden');
+    yearlyBox.classList.add('hidden');
+    customBox.classList.add('hidden');
+
+    if (mode === 'monthly') {
+        monthlyBox.classList.remove('hidden');
+    } else if (mode === 'yearly') {
+        yearlyBox.classList.remove('hidden');
+    } else if (mode === 'custom') {
+        customBox.classList.remove('hidden');
+    }
+
+    renderDashboard();
+};
 
 window.updateCategoryOptions = () => {
     const type = document.getElementById('trx-type').value;
@@ -144,22 +168,21 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-document.getElementById('filter-month').addEventListener('change', () => {
-    renderDashboard();
-});
+document.getElementById('filter-month').addEventListener('change', renderDashboard);
+document.getElementById('filter-year').addEventListener('input', renderDashboard);
+document.getElementById('filter-start').addEventListener('change', renderDashboard);
+document.getElementById('filter-end').addEventListener('change', renderDashboard);
 
 document.getElementById('transaction-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!currentUid) return;
 
-    const type = document.getElementById('trx-type').value; 
+    const type = document.getElementById('trx-type').value;
     const title = document.getElementById('trx-title').value;
     const amount = Number(document.getElementById('trx-amount').value);
     const date = document.getElementById('trx-date').value;
     const category = document.getElementById('trx-category').value;
     const trxMonth = date.slice(0, 7);
-
-    document.getElementById('filter-month').value = trxMonth;
 
     const trxRef = push(ref(db, `afl3cc/${currentUid}/transactions`));
     await set(trxRef, {
@@ -185,7 +208,12 @@ function listenToTransactions(uid) {
 }
 
 function renderDashboard() {
+    const mode = document.getElementById('filter-mode').value;
     const selectedMonth = document.getElementById('filter-month').value;
+    const selectedYear = document.getElementById('filter-year').value;
+    const startDate = document.getElementById('filter-start').value;
+    const endDate = document.getElementById('filter-end').value;
+
     const listContainer = document.getElementById('transaction-list');
     listContainer.innerHTML = '';
 
@@ -194,15 +222,41 @@ function renderDashboard() {
     let count = 0;
     const expenseByCategory = {};
 
+    let periodLabel = '';
+    if (mode === 'monthly') {
+        periodLabel = `bulan ${selectedMonth}`;
+    } else if (mode === 'yearly') {
+        periodLabel = `tahun ${selectedYear}`;
+    } else {
+        periodLabel = `periode ${startDate || '...'} s/d ${endDate || '...'}`;
+    }
+
     const entries = Object.entries(allTransactions).filter(([_, item]) => {
-        const itemMonth = item.month || (item.date ? item.date.slice(0, 7) : defaultMonth);
-        return itemMonth === selectedMonth;
+        const itemDate = item.date || `${defaultMonth}-01`;
+        const itemMonth = item.month || itemDate.slice(0, 7);
+        const itemYear = itemDate.slice(0, 4);
+
+        if (mode === 'monthly') {
+            return itemMonth === selectedMonth;
+        } else if (mode === 'yearly') {
+            return itemYear === String(selectedYear);
+        } else if (mode === 'custom') {
+            if (startDate && endDate) {
+                return itemDate >= startDate && itemDate <= endDate;
+            } else if (startDate) {
+                return itemDate >= startDate;
+            } else if (endDate) {
+                return itemDate <= endDate;
+            }
+            return true;
+        }
+        return true;
     });
 
     entries.sort((a, b) => (b[1].date || '').localeCompare(a[1].date || ''));
 
     if (entries.length === 0) {
-        listContainer.innerHTML = `<p style="color:#64748b; text-align:center; padding: 20px;">Belum ada transaksi di bulan ${selectedMonth}.</p>`;
+        listContainer.innerHTML = `<p class="empty-msg">Belum ada transaksi pada ${periodLabel}.</p>`;
     } else {
         entries.forEach(([key, data]) => {
             const isIncome = data.type === 'income';
@@ -251,10 +305,11 @@ function renderDashboard() {
         balanceCardBox.classList.remove('minus');
     }
 
-    renderCategoryChart(expenseByCategory, totalExpense);
+    renderCategoryChart(expenseByCategory, totalExpense, periodLabel);
 }
 
-function renderCategoryChart(expenseByCategory, totalExpense) {
+function renderCategoryChart(expenseByCategory, totalExpense, periodLabel) {
+    const chartContent = document.getElementById('chart-content');
     const canvas = document.getElementById('expenseChart');
     const emptyMsg = document.getElementById('empty-chart-msg');
     const breakdownContainer = document.getElementById('category-breakdown');
@@ -264,7 +319,8 @@ function renderCategoryChart(expenseByCategory, totalExpense) {
     const values = Object.values(expenseByCategory);
 
     if (categories.length === 0) {
-        canvas.classList.add('hidden');
+        chartContent.classList.add('hidden');
+        emptyMsg.textContent = `Belum ada data pengeluaran pada ${periodLabel}.`;
         emptyMsg.classList.remove('hidden');
         if (expenseChartInstance) {
             expenseChartInstance.destroy();
@@ -273,7 +329,7 @@ function renderCategoryChart(expenseByCategory, totalExpense) {
         return;
     }
 
-    canvas.classList.remove('hidden');
+    chartContent.classList.remove('hidden');
     emptyMsg.classList.add('hidden');
 
     const colors = categories.map(cat => CATEGORY_COLORS[cat] || '#10b981');

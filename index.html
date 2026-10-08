@@ -12,8 +12,8 @@
     <div class="main-wrapper">
         <header class="top-brand">
             <div class="logo-circle">💸</div>
-            <h1>OUR<span>wallet</span></h1>
-            <p>Manajemen Arus Kas Harian & Analitik Pengeluaran Bulanan</p>
+            <h1>AFL3CC<span>Wallet</span></h1>
+            <p>Manajemen Arus Kas Harian & Analitik Pengeluaran</p>
         </header>
 
         <section id="auth-section" class="glass-card auth-box">
@@ -55,12 +55,38 @@
                     <span class="badge-verified">● Akun Aktif</span>
                     <p id="active-user-email" class="user-email"></p>
                 </div>
-                <div class="bar-right">
-                    <div class="month-picker">
-                        <label>📅 Periode:</label>
-                        <input type="month" id="filter-month">
+                <button id="btn-logout" class="btn-outline-danger">Keluar</button>
+            </div>
+
+            <div class="glass-card filter-card">
+                <div class="filter-group">
+                    <label>📅 Mode Periode</label>
+                    <select id="filter-mode" onchange="handleFilterModeChange()">
+                        <option value="monthly">Per Bulan</option>
+                        <option value="yearly">Per Tahun</option>
+                        <option value="custom">Rentang Tanggal (Custom)</option>
+                    </select>
+                </div>
+
+                <div id="filter-monthly-box" class="filter-group">
+                    <label>Pilih Bulan</label>
+                    <input type="month" id="filter-month">
+                </div>
+
+                <div id="filter-yearly-box" class="filter-group hidden">
+                    <label>Pilih Tahun</label>
+                    <input type="number" id="filter-year" min="2000" max="2100" placeholder="2026">
+                </div>
+
+                <div id="filter-custom-box" class="filter-custom-range hidden">
+                    <div class="filter-group">
+                        <label>Dari Tanggal</label>
+                        <input type="date" id="filter-start">
                     </div>
-                    <button id="btn-logout" class="btn-outline-danger">Keluar</button>
+                    <div class="filter-group">
+                        <label>Sampai Tanggal</label>
+                        <input type="date" id="filter-end">
+                    </div>
                 </div>
             </div>
 
@@ -74,7 +100,7 @@
                     <h2 id="total-amount">Rp 0</h2>
                 </div>
                 <div class="summary-card balance-card" id="balance-card-box">
-                    <span>Sisa Saldo Bulan Ini</span>
+                    <span id="balance-label">Sisa Saldo Periode Ini</span>
                     <h2 id="remaining-balance">Rp 0</h2>
                 </div>
             </div>
@@ -97,10 +123,12 @@
 
             <div class="glass-card chart-card">
                 <h3>📊 Analitik Pengeluaran per Kategori</h3>
-                <div class="chart-wrapper">
+                
+                <p id="empty-chart-msg" class="empty-msg hidden">Belum ada data pengeluaran pada periode ini.</p>
+                
+                <div id="chart-content" class="chart-wrapper">
                     <div class="canvas-holder">
                         <canvas id="expenseChart"></canvas>
-                        <p id="empty-chart-msg" class="empty-msg hidden">Belum ada data pengeluaran bulan ini.</p>
                     </div>
                     <div id="category-breakdown" class="category-breakdown">
                     </div>
@@ -109,13 +137,17 @@
 
             <div class="glass-card list-card">
                 <div class="list-header">
-                    <h3>Riwayat Transaksi Bulan Ini</h3>
+                    <h3 id="history-title">Riwayat Transaksi</h3>
                     <span id="total-items" class="badge-count">0 Catatan</span>
                 </div>
                 <div id="transaction-list" class="expense-items-container">
                 </div>
             </div>
         </section>
+
+        <footer class="app-footer">
+            <p>&copy; 2026 AFL3CC Wallet &bull; Dibuat oleh <span>ds</span></p>
+        </footer>
     </div>
 
     <script type="module" src="app.js"></script>
